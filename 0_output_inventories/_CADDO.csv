@@ -1,0 +1,12 @@
+phoneme,feature
+I,lowered
+I,high
+I,front
+I,unrounded
+U,lowered
+U,high
+U,back
+U,rounded
+a,low
+a,central
+a,unrounded
