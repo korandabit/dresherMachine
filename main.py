@@ -6,7 +6,7 @@ import csv,ast,re, itertools, glob,sys,os,datetime
 
 import dresher_LSA as d
 import main_1inventoryMover as m
-import main_2inventoryParser2 as k
+import main_2inventoryParser2test as k
 import main_3min_analysis as a1
 import main_4efficiency_analysis as a2
 """
@@ -44,10 +44,10 @@ writer=False #toggle in order to write to file.
 try:
 	vowel_inventory_size=int(sys.argv[1])
 except:
-	vowel_inventory_size=6
+	vowel_inventory_size=5
 #could be written to optionally take range. currently doesn't. 
-inventory_range=0 #inventory range setting (0=full, 1=first, 2=first 2). This gets passed to Parser and Analysis 2.
-use_random_generator=True #toggle to turn of sampling of only a subset of features.
+inventory_range=1 #inventory range setting (0=full, 1=first, 2=first 2). This gets passed to Parser and Analysis 2.
+use_random_generator=False #toggle to turn of sampling of only a subset of features.
 
 today=datetime.date.today()
 wFilename='{} v{}'.format(today,str(vowel_inventory_size))
@@ -71,7 +71,12 @@ kdm_parsed = k.runTimeVars(mover_listofFiles, #list of files from mover;
 							writeFile=False) # write to file = false
 #takes in list of files from mover.
 #outputs 1_KDM_parsed.txt
-
+for i in range(len(kdm_parsed[0])):
+	if i==3:
+		for x in kdm_parsed[0][i]:
+			print(x)
+	else:
+		print(kdm_parsed[0][i])
 #################
 # Analysis 1 & 2#
 #################

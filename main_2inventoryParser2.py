@@ -79,8 +79,10 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		return listofFiles
 	
 	def runtime(inventory):
-
+		print(inventory)
+		print(inventory.keys())
 		curUniqueFeatures=d.uniqueFeatures(inventory,inventory.keys())
+		print(curUniqueFeatures)
 		local_vowel_length=len(inventory.keys())
 		def permLength(vowel_inventory_size,curUniqueFeatures):
 			"""Sets a smaller size of feature sets searched, as a function of vowel inventory size to avoid combo explosion. It's a hack which eventually could be replaced."""
@@ -97,8 +99,9 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		"""List of all iterations of current unique features."""
 		
 		permLength=permLength(vowel_inventory_size,curUniqueFeatures)
+		print(permLength)
 		fullPerms=d.permGenerator(curUniqueFeatures, permLength, permOrder) #See Runtime Vars to configure.
-		
+		print(len(fullPerms))	
 		if randomGenerator: #See Runtime Vars to configure random sampling.
 			fullPerms=d.randomSampler(fullPerms,randomGenSize)
 			# print( "Random Gen on: "+str(len(fullPerms))+" inventories.")
