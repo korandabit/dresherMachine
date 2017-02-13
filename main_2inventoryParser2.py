@@ -99,6 +99,15 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		"""List of all iterations of current unique features."""
 		
 		permLength=permLength(vowel_inventory_size,curUniqueFeatures)
+		#TODO Rework algorithm
+		#only need to generate combinations (!) of minimum possible length
+		# ceil(log2(number of phonemes))
+		# if a combination of features successfully discriminates, then all 
+		# sets of features containing that combination will too (but they will 
+		# be overmarked)
+		# any permutation of a discriminating set will also discriminate
+		# if a combination of features fails to distinguish say n phones, it may be possible to extend
+		# it to a combination that does by adding ceil(log2(n)) features
 		print(permLength)
 		fullPerms=d.permGenerator(curUniqueFeatures, permLength, permOrder) #See Runtime Vars to configure.
 		print(len(fullPerms))	
@@ -110,9 +119,11 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		"""Efficient algorithm"""	
 		totalTrees={}
 		counterTotal=0
-		for curPerm in fullPerms:
-		
+		for curPerm in fullPerms[0:30]:
+			## CHECK THESE	
 			phoneFeatArray=d.arrayBuilder(inventory,inventory.keys(),curPerm,binary='n')
+			print(curPerm)
+			print(phoneFeatArray)	
 			eTrees=d.findDiscriminatingPhonemes(phoneFeatArray,columnLabels=[]) 
 			# print eTrees
 			eTrees=d.efficientWrapper(curPerm,eTrees)

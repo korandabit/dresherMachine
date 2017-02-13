@@ -6,7 +6,7 @@ import csv,ast,re, itertools, glob,sys,os,datetime
 
 import dresher_LSA as d
 import main_1inventoryMover as m
-import main_2inventoryParser2test as k
+import main_2inventoryParser2 as k
 import main_3min_analysis as a1
 import main_4efficiency_analysis as a2
 """
