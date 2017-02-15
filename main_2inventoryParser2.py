@@ -1,6 +1,8 @@
 from __future__ import print_function
 import glob,sys,os
 from collections import Counter
+import math
+import itertools
 
 import dresher_LSA as d
 
@@ -36,9 +38,32 @@ unicode character compliant
 *write "look in directory x for inventories, write in directory y for analyses" functions to keep folders clean.
 
 """
+####################
+# Helper Functions #
+####################
 
 
+def inventoryRange(mover_listofFiles,inventory_range):
+	if inventory_range==0:
+		listofFiles=mover_listofFiles
+	elif inventory_range==1:
+		listofFiles=mover_listofFiles[:1]
+	else:
+		listofFiles=mover_listofFiles[0:2]
+	return listofFiles
 
+def permLength(vowel_inventory_size,curUniqueFeatures):
+	"""Sets a smaller size of feature sets searched, as a function of vowel inventory size to avoid combo explosion. It's a hack which eventually could be replaced."""
+	if vowel_inventory_size>5:
+		permLength=vowel_inventory_size-permLength_buffer
+	else:
+		permLength=5
+	"""below sets an upper bound to all possible features (in cases where vowel count>feature count."""
+	curLength=len(curUniqueFeatures)
+	if permLength>curLength:
+		permLength=curLength-(permLength_buffer*2)
+		
+	return permLength
 
 ################
 # Runtime Vars #
@@ -50,7 +75,7 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 	#GUI settings
 	text_analysisInit="\n\n-------------------------\nDRESHER PARSING INITIATED\n-------------------------\n"
 	header='*Vowel inventory size, inventory number, language used, unique efficient permutations found, current iteration count, total iterations to parse.\n\nV-Ct\tname\tperms\tcurIt\ttotal'
-	GUI_update_freq = 500 #Set higher for quicker analyses, fewer updates
+	GUI_update_freq = 1 #Set higher for quicker analyses, fewer updates
 
 	#Permutations settings
 	permOrder = True #If order matters, change here. If not, set to false (e.g. only unique sets). Needs to be set to true if looking for all unique efficient trees.
@@ -69,14 +94,6 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 	#############
 	# Functions #
 	#############
-	def inventoryRange(mover_listofFiles,inventory_range):
-		if inventory_range==0:
-			listofFiles=mover_listofFiles
-		elif inventory_range==1:
-			listofFiles=mover_listofFiles[:1]
-		else:
-			listofFiles=mover_listofFiles[0:2]
-		return listofFiles
 	
 	def runtime(inventory):
 		print(inventory)
@@ -84,21 +101,10 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		curUniqueFeatures=d.uniqueFeatures(inventory,inventory.keys())
 		print(curUniqueFeatures)
 		local_vowel_length=len(inventory.keys())
-		def permLength(vowel_inventory_size,curUniqueFeatures):
-			"""Sets a smaller size of feature sets searched, as a function of vowel inventory size to avoid combo explosion. It's a hack which eventually could be replaced."""
-			if vowel_inventory_size>5:
-				permLength=vowel_inventory_size-permLength_buffer
-			else:
-				permLength=5
-			"""below sets an upper bound to all possible features (in cases where vowel count>feature count."""
-			curLength=len(curUniqueFeatures)
-			if permLength>curLength:
-				permLength=curLength-(permLength_buffer*2)
-			return permLength
 			
 		"""List of all iterations of current unique features."""
 		
-		permLength=permLength(vowel_inventory_size,curUniqueFeatures)
+		startCombLength=int(math.ceil(math.log(local_vowel_length, 2)))
 		#TODO Rework algorithm
 		#only need to generate combinations (!) of minimum possible length
 		# ceil(log2(number of phonemes))
@@ -108,55 +114,65 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		# any permutation of a discriminating set will also discriminate
 		# if a combination of features fails to distinguish say n phones, it may be possible to extend
 		# it to a combination that does by adding ceil(log2(n)) features
-		print(permLength)
-		fullPerms=d.permGenerator(curUniqueFeatures, permLength, permOrder) #See Runtime Vars to configure.
-		print(len(fullPerms))	
-		if randomGenerator: #See Runtime Vars to configure random sampling.
-			fullPerms=d.randomSampler(fullPerms,randomGenSize)
+		print(startCombLength)
+		#fullPerms=d.permGenerator(curUniqueFeatures, permLength, permOrder) #See Runtime Vars to configure.
+		minCombs = list(itertools.combinations(curUniqueFeatures, startCombLength))
+		print(len(minCombs))
+
+		#if randomGenerator: #See Runtime Vars to configure random sampling.
+		#	fullPerms=d.randomSampler(fullPerms,randomGenSize)
 			# print( "Random Gen on: "+str(len(fullPerms))+" inventories.")
 		
 		
 		"""Efficient algorithm"""	
-		totalTrees={}
+		goodCombs={}
 		counterTotal=0
-		for curPerm in fullPerms[0:30]:
-			## CHECK THESE	
-			phoneFeatArray=d.arrayBuilder(inventory,inventory.keys(),curPerm,binary='n')
-			print(curPerm)
-			print(phoneFeatArray)	
-			eTrees=d.findDiscriminatingPhonemes(phoneFeatArray,columnLabels=[]) 
-			# print eTrees
-			eTrees=d.efficientWrapper(curPerm,eTrees)
-			
-			totalTrees[tuple(sorted(eTrees[0]))] = True
-			counterTotal+=1
-			totalTrees_len=len(totalTrees.keys())
-			
-			"""Prints updates to screen"""
-
-			
-			if counterTotal % GUI_update_freq == 0: 
-				gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(totalTrees_len)+"\t"+str(counterTotal)+"\t"+str(len(fullPerms))
-				print(gui_update, end='\r')
+		for length in range(startCombLength, len(inventory.keys())+1):
+			curCombs = list(itertools.combinations(curUniqueFeatures, length))
+			for curComb in curCombs:
+				## CHECK THESE	
+				phoneFeatArray=d.arrayBuilder(inventory,inventory.keys(),curComb,binary='n')
+				#print(curComb)
+				#print(phoneFeatArray)
+				#print(phoneFeatArray.shape)
+				# A combination of features is permissible if it distinguishes all phonemes
+				# i.e. each row of the phoneFeatArray generated by the comb. must be unique
+				if phoneFeatArray.shape[0] == d.unique_rows(phoneFeatArray).shape[0]:
+					goodCombs[tuple(sorted(curComb))] = True
 				
-		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(totalTrees_len)+"\t"+str(counterTotal)+"\t"+str(len(fullPerms))
+				#These don't seem to be working properly
+				#eTrees=d.findDiscriminatingPhonemes(phoneFeatArray,columnLabels=[]) 
+				# print eTrees
+				#eTrees=d.efficientWrapper(curPerm,eTrees)
+			
+				counterTotal+=1
+				goodCombs_len=len(goodCombs.keys())
+				
+				"""Prints updates to screen"""
+
+				
+				if counterTotal % GUI_update_freq == 0: 
+					gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(goodCombs_len)+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
+					print(gui_update, end='\r')
+				
+		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(goodCombs_len)+"\t"+str(counterTotal)+"\t"+str(len(minCombs))
 		print (gui_update)
 
 		"""Error check."""
 		#If 'Saturated list' appears in output file, change length threshold on unique perms.
-		if counterTotal==totalTrees_len:
-			totalTrees={"saturated list":True}
+		if counterTotal==goodCombs_len:
+			goodCombs={"saturated list":True}
 		
 		"""write to file"""
-		wRows.append([curInventory,inventory.keys(),curUniqueFeatures,totalTrees.keys()])
+		wRows.append([curInventory,inventory.keys(),curUniqueFeatures,goodCombs.keys()])
 		
 		"""Tree Generator"""
 
 		if treeGenerator_on:
-			fullPermOutput=d.dresherGenerate(inventory,totalTrees.keys(),inventory.keys(),curInventory) #this is what makes the trees.
+			fullPermOutput=d.dresherGenerate(inventory,goodCombs.keys(),inventory.keys(),curInventory) #this is what makes the trees.
 			writeRow.append(fullPermOutput)
 			
-		return totalTrees.keys()
+		return goodCombs.keys()
 
 	
 	#############
@@ -187,5 +203,3 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		d.writeBlock(wRows, wFilename, ext='.txt', method=writeMethod, delim='\n',endBuffer=endBuffer)
 
 	return wRows
-
-
