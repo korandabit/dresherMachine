@@ -71,19 +71,20 @@ kdm_parsed = k.runTimeVars(mover_listofFiles, #list of files from mover;
 							writeFile=False) # write to file = false
 #takes in list of files from mover.
 #outputs 1_KDM_parsed.txt
-for i in range(len(kdm_parsed[0])):
-	if i==3:
-		for j in range(len(kdm_parsed[0][i])):
-			print(kdm_parsed[0][i][j])
-			if j in range(3):
-				inv = d.inventoryImport(mover_listofFiles[0])
-				pArray = d.arrayBuilder(inv, inv.keys(), kdm_parsed[0][i][j], binary='n')
-				print(pArray)
-				discp = d.findDiscriminatingPhonemes(pArray, columnLabels=[])
-				print(discp)
-				print(d.efficientWrapper(kdm_parsed[0][i][j], discp))
-	else:
-		print(kdm_parsed[0][i])
+print(kdm_parsed)
+#for i in range(len(kdm_parsed[0])):
+#	if i==3:
+#		for j in range(len(kdm_parsed[0][i])):
+#			print(kdm_parsed[0][i][j])
+#			if j in range(3):
+#				inv = d.inventoryImport(mover_listofFiles[0])
+#				pArray = d.arrayBuilder(inv, inv.keys(), kdm_parsed[0][i][j], binary='n')
+#				print(pArray)
+#				discp = d.findDiscriminatingPhonemes(pArray, columnLabels=[])
+#				print(discp)
+#				print(d.efficientWrapper(kdm_parsed[0][i][j], discp))
+#	else:
+#		print(kdm_parsed[0][i])
 #################
 # Analysis 1 & 2#
 #################
