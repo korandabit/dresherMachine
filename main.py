@@ -44,9 +44,9 @@ writer=False #toggle in order to write to file.
 try:
 	vowel_inventory_size=int(sys.argv[1])
 except:
-	vowel_inventory_size=5
+	vowel_inventory_size=7
 #could be written to optionally take range. currently doesn't. 
-inventory_range=1 #inventory range setting (0=full, 1=first, 2=first 2). This gets passed to Parser and Analysis 2.
+inventory_range=0 #inventory range setting (0=full, 1=first, 2=first 2). This gets passed to Parser and Analysis 2.
 use_random_generator=False #toggle to turn of sampling of only a subset of features.
 
 today=datetime.date.today()
@@ -71,7 +71,7 @@ kdm_parsed = k.runTimeVars(mover_listofFiles, #list of files from mover;
 							writeFile=False) # write to file = false
 #takes in list of files from mover.
 #outputs 1_KDM_parsed.txt
-print(kdm_parsed)
+#print(kdm_parsed)
 #for i in range(len(kdm_parsed[0])):
 #	if i==3:
 #		for j in range(len(kdm_parsed[0][i])):

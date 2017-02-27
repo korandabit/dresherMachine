@@ -75,7 +75,7 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 	#GUI settings
 	text_analysisInit="\n\n-------------------------\nDRESHER PARSING INITIATED\n-------------------------\n"
 	header='*Vowel inventory size, inventory number, language used, unique efficient permutations found, current iteration count, total iterations to parse.\n\nV-Ct\tname\tperms\tcurIt\ttotal'
-	GUI_update_freq = 1 #Set higher for quicker analyses, fewer updates
+	GUI_update_freq = 1000 #Set higher for quicker analyses, fewer updates
 
 	#Permutations settings
 	permOrder = True #If order matters, change here. If not, set to false (e.g. only unique sets). Needs to be set to true if looking for all unique efficient trees.
@@ -96,16 +96,15 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 	#############
 	
 	def runtime(inventory):
-		print(inventory)
-		print(inventory.keys())
+		#print(inventory)
+		#print(inventory.keys())
 		curUniqueFeatures=d.uniqueFeatures(inventory,inventory.keys())
-		print(curUniqueFeatures)
+		#print(curUniqueFeatures)
 		local_vowel_length=len(inventory.keys())
 			
 		"""List of all iterations of current unique features."""
 		
 		startCombLength=int(math.ceil(math.log(local_vowel_length, 2)))
-		#TODO Rework algorithm
 		#only need to generate combinations (!) of minimum possible length
 		# ceil(log2(number of phonemes))
 		# if a combination of features successfully discriminates, then all 
@@ -114,14 +113,14 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 		# any permutation of a discriminating set will also discriminate
 		# if a combination of features fails to distinguish say n phones, it may be possible to extend
 		# it to a combination that does by adding ceil(log2(n)) features
-		print(startCombLength)
+		#print(startCombLength)
 		#fullPerms=d.permGenerator(curUniqueFeatures, permLength, permOrder) #See Runtime Vars to configure.
 		minCombs = list(itertools.combinations(curUniqueFeatures, startCombLength))
-		print(len(minCombs))
+		#print(len(minCombs))
 
-		#if randomGenerator: #See Runtime Vars to configure random sampling.
-		#	fullPerms=d.randomSampler(fullPerms,randomGenSize)
-			# print( "Random Gen on: "+str(len(fullPerms))+" inventories.")
+		if randomGenerator: #See Runtime Vars to configure random sampling.
+			fullPerms=d.randomSampler(fullPerms,randomGenSize)
+			print( "Random Gen on: "+str(len(fullPerms))+" inventories.")
 		
 		
 		"""Efficient algorithm"""	
@@ -150,12 +149,12 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 								if tuple(perm[0:i+1]) in goodPerms:
 									# means that there are redundant features at the tail
 									#print("caught in first pass")
-									print(str(perm) + " covered by " + str(perm[0:i+1]))
+									#print(str(perm) + " covered by " + str(perm[0:i+1]))
 									raise ValueError("Bad")
 								if tuple(perm[0:i+1]) in badPerms:
 									# means that there is a redundant feature within permutation
 									#print("caught in first pass")
-									print(str(perm) + " " + str(perm[i+1]) + " is redundant")
+									#print(str(perm) + " " + str(perm[i+1]) + " is redundant")
 									raise ValueError("Bad")
 						except ValueError:
 							continue
@@ -172,13 +171,12 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 								prevNumDistinct = curNumDistinct
 						except ValueError:
 							badPerms.add(tuple(perm[0:i+1]))
-							print("feature " + perm[i] + " doesn't add new information")
-							print(perm)
+						#	print("feature " + perm[i] + " doesn't add new information")
+						#	print(perm)
 							continue
-						print(perm)
-						print("good")
+						#print(perm)
+						#print("good")
 						goodPerms.add(tuple(perm))
-				#These don't seem to be working properly
 				#eTrees=d.findDiscriminatingPhonemes(phoneFeatArray,columnLabels=[]) 
 				# print eTrees
 				#eTrees=d.efficientWrapper(curPerm,eTrees)
@@ -188,11 +186,12 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 				"""Prints updates to screen"""
 
 				
-				#if counterTotal % GUI_update_freq == 0: 
-				#	gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodCombs))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
-				#	print(gui_update, end='\r')
+				if counterTotal % GUI_update_freq == 0: 
+					# TODO fix gui updates
+					gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
+					print(gui_update, end='\r\033[K')
 				
-		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodCombs))+"\t"+str(counterTotal)+"\t"+str(len(minCombs))
+		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(minCombs))
 		print (gui_update)
 
 		"""Error check."""
