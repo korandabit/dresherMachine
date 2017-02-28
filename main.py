@@ -44,10 +44,10 @@ writer=False #toggle in order to write to file.
 try:
 	vowel_inventory_size=int(sys.argv[1])
 except:
-	vowel_inventory_size=6
+	vowel_inventory_size=7
 #could be written to optionally take range. currently doesn't. 
 inventory_range=0 #inventory range setting (0=full, 1=first, 2=first 2). This gets passed to Parser and Analysis 2.
-use_random_generator=True #toggle to turn of sampling of only a subset of features.
+use_random_generator=False #toggle to turn of sampling of only a subset of features.
 
 today=datetime.date.today()
 wFilename='{} v{}'.format(today,str(vowel_inventory_size))
@@ -71,7 +71,20 @@ kdm_parsed = k.runTimeVars(mover_listofFiles, #list of files from mover;
 							writeFile=False) # write to file = false
 #takes in list of files from mover.
 #outputs 1_KDM_parsed.txt
-
+#print(kdm_parsed)
+#for i in range(len(kdm_parsed[0])):
+#	if i==3:
+#		for j in range(len(kdm_parsed[0][i])):
+#			print(kdm_parsed[0][i][j])
+#			if j in range(3):
+#				inv = d.inventoryImport(mover_listofFiles[0])
+#				pArray = d.arrayBuilder(inv, inv.keys(), kdm_parsed[0][i][j], binary='n')
+#				print(pArray)
+#				discp = d.findDiscriminatingPhonemes(pArray, columnLabels=[])
+#				print(discp)
+#				print(d.efficientWrapper(kdm_parsed[0][i][j], discp))
+#	else:
+#		print(kdm_parsed[0][i])
 #################
 # Analysis 1 & 2#
 #################

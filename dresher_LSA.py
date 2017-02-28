@@ -250,6 +250,15 @@ def efficientWrapper(curUniqueFeatures,eTrees):
 		well as reports whether the efficientTree was successful."""
 	counter=1
 	listOfTrees=[]
+	if len(eTrees)==0:
+		# This was in principle the source of the error
+		# findDiscriminating phonemes would return an empty set even if
+		# it failed to discriminate phonemes completely, so bad hierarchies 
+		# could slip through
+
+		# print "No redundant features." 
+		# print curUniqueFeatures
+		return [curUniqueFeatures]
 	for eachTree in eTrees:
 		#print "Tree"+str(counter)
 		listOfFeats=[]
@@ -259,11 +268,8 @@ def efficientWrapper(curUniqueFeatures,eTrees):
 		counter+=1
 		# print "Minimal feature set: "
 		# print listOfTrees
-		return listOfTrees
-	if len(eTrees)==0:
-		# print "No redundant features." 
-		# print curUniqueFeatures
-		return [curUniqueFeatures]
+	#fixed this - previously would only return the first eachTree
+	return listOfTrees
 
 
 		
