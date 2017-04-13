@@ -160,7 +160,6 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 							continue
 						orderedArray = d.arrayBuilder(inventory, inventory.keys(), perm)
 						#print(orderedArray)
-						specDict = {}
 						prevNumDistinct = 1
 						try:
 							for i in range(orderedArray.shape[1]):
@@ -171,8 +170,8 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 								prevNumDistinct = curNumDistinct
 						except ValueError:
 							badPerms.add(tuple(perm[0:i+1]))
-						#	print("feature " + perm[i] + " doesn't add new information")
-						#	print(perm)
+							#print("feature " + perm[i] + " doesn't add new information")
+							#print(perm)
 							continue
 						#print(perm)
 						#print("good")
@@ -191,7 +190,7 @@ def runTimeVars(mover_listofFiles,vowel_inventory_size,inventory_range=1,randomG
 					gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
 					print(gui_update, end='\r\033[K')
 				
-		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(minCombs))
+		gui_update= str(local_vowel_length)+'-'+str(invNum)+"\t"+str(curInventory[22:28])+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
 		print (gui_update)
 
 		"""Error check."""
