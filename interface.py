@@ -8,7 +8,6 @@ import tables
 import threading
 import os
 from shutil import rmtree
-import main_1inventoryMover as m
 
 class DresherInterface(cmd.Cmd, object):
 	intro = "dresherian hierarchy suite"
@@ -35,10 +34,11 @@ class DresherInterface(cmd.Cmd, object):
 		self.inv_name_dict = defaultdict(list)
 		self.queries = []
 	def do_load(self, args):
-		"""syntax: load folder length
-loads files from specified folder of specified inventory length
-length optional
+		"""syntax: load folder length(s)
+loads files from specified folder of specified inventory length(s)
+length(s) optional
 ex: load 0_output_inventories/ 5
+NOTE: currently just loads all the inventories from the folder
 """
 		splitargs = args.split(" ")
 		folder = splitargs[0]
@@ -71,6 +71,10 @@ ex: load 0_output_inventories/ 5
 		#	else:	
 		#		self.languages.append(Language(lname, len(self.languages) + 1, ldict, lfeats))
 	def do_filter(self, args):
+		"""syntax: filter length(s)
+ex: filter 3 4 5
+throws out currently loaded languages whose length is not 3, 4, or 5
+"""
 		lens = [int(i) for i in args.split(" ")]
 		newlangs = []
 		for lang in self.languages:
@@ -91,8 +95,12 @@ ex: load 0_output_inventories/ 5
 #			if lname.strip(".")  not in [la.name for la in self.languages]:
 #				self.languages.append(Language(lname, len(self.languages) + 1, ldict, lfeats))
 	def do_generate(self, args):
+		"""generate the hierarchies for languages"""
 		[lang.hierarchies for lang in self.languages]
 	def do_threadedgen(self, args):
+		"""use multithreading to generate hierarchies
+careful: this uses up a lot of memory at once, need to implement a thread pool/queue
+"""
 		for lang in self.languages:
 			t = threading.Thread(name = lang.name + " hierarchies", target = getattr, args= (lang, "hierarchies"))
 			print("spawning thread to generate hierarchies for " + lang.name)
