@@ -1,15 +1,15 @@
 from __future__ import print_function
+from builtins import range
 from collections import Counter, defaultdict
 import math
 import sys
 import itertools
 import re
-import tables
+#import tables
 import threading
 import os
-import main_1inventoryMover as m
-import dresher_LSA as d
-
+#import main_1inventoryMover as m
+#import dresher_LSA as d
 class Language(object):
 	def __init__(self, name, freq, phones, features, coding="binary"):
 		"""	
@@ -19,10 +19,10 @@ class Language(object):
 		coding		= type of feature coding. down the road can add support for Avery&Idsardi or other systems
 		"""
 		name = name.strip(".")
-		self._table_hierarchy_dict = dict([(feature, tables.Int8Col()) for feature in features])
-		self.table_file = tables.open_file(name + ".h5", mode="w", title = "Top level h5 file for " + name)
-		self.table_hierarchies = self.table_file.create_table("/", "hierarchies", self._table_hierarchy_dict, "Stores the good hierarchies")
-		self.table_bad_hierarchies = self.table_file.create_table("/", "bad_hierarchies", self._table_hierarchy_dict, "Stores the bad hierarchies")
+		#self._table_hierarchy_dict = dict([(feature, tables.Int8Col()) for feature in features])
+		#self.table_file = tables.open_file(name + ".h5", mode="w", title = "Top level h5 file for " + name)
+		#self.table_hierarchies = self.table_file.create_table("/", "hierarchies", self._table_hierarchy_dict, "Stores the good hierarchies")
+		#self.table_bad_hierarchies = self.table_file.create_table("/", "bad_hierarchies", self._table_hierarchy_dict, "Stores the bad hierarchies")
 		#self.table_phones = self.table_file.create_table("/", "phones", "Stores the phones and their feature values")
 		#self.table_group_queries = self.table_file.create_group("/", "queries", "Group to store output from queries")
 		self.name = name
@@ -30,12 +30,13 @@ class Language(object):
 		self._features = features
 		self._coding = coding
 		
+		self.phone_feat_dict = {k : [self._features[i] for i in range(len(self._features)) if self._phones[k][i] == 1] for k in self._phones.keys()}
 		# num of languages with this inventory
 		self.freq = freq 
 		# set of admissible hierarchies (tuples)
 		# should be accessed from outside via hierarchies propery
 		# since _hierarchies might be stale if feature specs are updated
-		#self._hierarchies = set()
+		self._hierarchies = set()
 		# deprecated in favor of table_hierarchies
 
 		# list storing distribution of hierarchy lengths
@@ -65,7 +66,9 @@ class Language(object):
 			self.log(self.name + " waiting for lock")
 			with self._file_lock:
 				self.log(self.name + " got lock")
-				return function(self, *args, **kwargs)
+				result = function(self, *args, **kwargs)
+				self.log(self.name + " freeing lock")
+			return result
 		return make_thread_safe
 	def _update_if_necessary(function):
 		def perform_update_if_needed(self, *args, **kwargs):
@@ -74,23 +77,6 @@ class Language(object):
 			return function(self, *args, **kwargs)
 		return perform_update_if_needed
 
-	@staticmethod
-	def load_from_file(languagefile, coding="binary"):
-		# process the file in the same way as done in existing code and return
-		# language object with 
-		# return Language(name, phones, features)
-		# lots of room for extensibility here
-		os.chdir("..")
-		inv = d.inventoryImport(languagefile)
-		feats = tuple(set([feat for key in inv.keys() for feat in inv[key]]))
-		featDict = {}
-		for phone in inv.keys():
-			featDict[phone] = [1 if feat in inv[phone] else 0 for feat in feats]
-		#print(inv)
-		#print(feats)
-		#print(featDict)
-		os.chdir("run")
-		return languagefile[22:28], featDict, feats
 	def write_to_file(self, filename):
 		pass
 	def build_array(self, features):
@@ -103,8 +89,8 @@ class Language(object):
 	@property
 	@_update_if_necessary
 	def hierarchies(self):
-		return set([self.row_to_tuple(r) for r in self.table_hierarchies])
-		#return self._hierarchies
+		#return set([self.row_to_tuple(r) for r in self.table_hierarchies])
+		return self._hierarchies
 
 	@hierarchies.setter
 	def hierarchies(self, val):
@@ -133,6 +119,7 @@ class Language(object):
 		goodCombs=set()
 		goodPerms=set()
 		badPerms=set()
+		
 		lengths = Counter()
 		counterTotal=0
 		for length in range(startCombLength, len(self._phones.keys())+1):
@@ -176,29 +163,29 @@ class Language(object):
 								prevNumDistinct = curNumDistinct
 						except ValueError:
 							badPerms.add(tuple(perm[0:i+1]))
-							r = self.table_bad_hierarchies.row
-							for f in self.table_bad_hierarchies.colnames:
-								try:
-									r[f] = perm[0:i+1].index(f)
-								except ValueError:
-									r[f] = -1
-							r.append()
-							self.table_bad_hierarchies.flush()
+							#r = self.table_bad_hierarchies.row
+							#for f in self.table_bad_hierarchies.colnames:
+							#	try:
+							#		r[f] = perm[0:i+1].index(f)
+							#	except ValueError:
+							#		r[f] = -1
+							#r.append()
+							#self.table_bad_hierarchies.flush()
 							#print("feature " + perm[i] + " doesn't add new information")
 							#print(perm)
 							continue
 						#print(perm)
 						#print("good")
 						lengths[len(perm)] += 1
-						#goodPerms.add(tuple(perm))
-						r = self.table_hierarchies.row
-						for f in self.table_hierarchies.colnames:
-							try:
-								r[f] = perm[0:i+1].index(f)
-							except ValueError:
-								r[f] = -1
-						r.append()
-						self.table_hierarchies.flush()
+						goodPerms.add(tuple(perm))
+						#r = self.table_hierarchies.row
+						#for f in self.table_hierarchies.colnames:
+						#	try:
+						#		r[f] = perm[0:i+1].index(f)
+						#	except ValueError:
+						#		r[f] = -1
+						#r.append()
+						#self.table_hierarchies.flush()
 						
 			
 				counterTotal+=1
@@ -210,7 +197,7 @@ class Language(object):
 		if self.verbose:
 			gui_update = str(len(self._phones.keys()))+'-'+"\t"+self.name+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
 			print(gui_update)
-		#self._hierarchies = goodPerms
+		self._hierarchies = goodPerms
 		self._hierarchyLengths = lengths
 		self._needsUpdate = False
 
@@ -324,28 +311,8 @@ def SDA(phonedict, features, hierarchy):
 	return outdict
 
 if __name__ == "__main__":
-	runMain = True
-	testSDA = False
-	if runMain:
-		# load files into language objects
-		inventory_size = int(sys.argv[1])
-	
-		#TODO make mover function more extensible
-		fileList = m.mover(inventory_size)
-		#print(fileList)
-		languages = []
-		for i, f in enumerate(fileList):
-			languages.append(Language.load_from_file(f, i+1))
-		# generate hierarchies
-		print("V-ct\tname\tperms\tcurIt\ttotal")
-		for language in languages:
-			language.verbose = True
-			language.hierarchies
-		# analysis
-		print("lang\tperms\tmin\tmax")
-		for language in languages:
-			language.min_analysis()
-		eff, _ = languages[0].efficiency_analysis()
+	runMain = False
+	testSDA = True
 	if testSDA:
 		phonedict = {"a": (1,1,1), "e": (1,0,0), "i": (0,0,1), "o": (0,0,0)}
 		features = ["1", "2", "3"]
