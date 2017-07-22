@@ -60,7 +60,7 @@ class DresherInterface(cmd.Cmd, object):
 			return result
 		return wrapped
 	def preloop(self):
-		if os.path.exists(history_file) and HAS_READLINE:
+		if HAS_READLINE and os.path.exists(history_file):
 			readline.read_history_file(history_file)
 	def postloop(self):
 		if HAS_READLINE:
