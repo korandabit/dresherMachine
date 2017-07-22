@@ -9,11 +9,16 @@ import csv
 import threading
 import os
 import glob
-import readline
 from shutil import rmtree
-readline.set_completer_delims(" \t\n")
-history_file = os.path.abspath(".dresher_interface_history")
-history_length = 100
+HAS_READLINE = False
+try:
+	import readline
+	HAS_READLINE = True
+	readline.set_completer_delims(" \t\n")
+	history_file = os.path.abspath(".dresher_interface_history")
+	history_length = 100
+except ImportError:
+	pass
 
 class DresherInterface(cmd.Cmd, object):
 	intro = "dresherian hierarchy suite"
@@ -55,11 +60,12 @@ class DresherInterface(cmd.Cmd, object):
 			return result
 		return wrapped
 	def preloop(self):
-		if os.path.exists(history_file):
+		if os.path.exists(history_file) and HAS_READLINE:
 			readline.read_history_file(history_file)
 	def postloop(self):
-		readline.set_history_length(history_length)
-		readline.write_history_file(history_file)
+		if HAS_READLINE:
+			readline.set_history_length(history_length)
+			readline.write_history_file(history_file)
 	def do_languages(self, args):
 		"""syntax: languages file filter"""
 		self.lang_phone_dict = defaultdict(list)
@@ -137,12 +143,12 @@ throws out currently loaded languages whose length is not 3, 4, or 5
 		self.languages = newlangs
 	def do_generate(self, args):
 		"""generate the hierarchies for languages"""
-		[lang.hierarchies for lang in self.languages]
+		[lang.hierarchyLengths for lang in self.languages]
 	def do_threadedgen(self, args):
 		"""use multithreading to generate hierarchies
 """
 		for lang in self.languages:
-			t = threading.Thread(name = lang.name + " hierarchies", target = self.wrap_semaphore(getattr), args= (lang, "hierarchies"))
+			t = threading.Thread(name = lang.name + " hierarchies", target = self.wrap_semaphore(getattr), args= (lang, "hierarchyLengths"))
 			print("spawning thread to generate hierarchies for " + lang.name)
 			t.start()
 			self.generate_threads.append(t)
@@ -273,46 +279,45 @@ available fields:
 			# format: #vowels, langname, hierarchy, len(hier), #of marks, lfeats, inv, freq, 
 			# how many times each feat marked, the actual marks, vowel:feature set, unused features
 			# take fname to be name of directory to write outfiles to
-			with wd(fname):
-				for lang in self.languages:
-					num_vowels = self.get_language_info(lang, "linv")
-					name = lang.name
-					num_feats = self.get_language_info(lang, "lfeats")
-					inv = self.get_language_info(lang, "inv")
-					freq = self.get_language_info(lang, "freq")
-					inv_feats = lang.phone_feat_dict
-					with open(name.replace(" ","")+".txt", 'w') as f:
-						f.write("num_vowels\tname\thierarchy\tlen_hier\tnum_marks\tnumfeats\tinv\tfreq\tfeat_marks\tinv_marks\tinv_feats\tunused_feats\n")
-						for h in lang.hierarchies:
-							f.write(str(num_vowels))
-							f.write("\t")
-							f.write(name)
-							f.write("\t")
-							f.write(str(h))
-							f.write("\t")
-							f.write(str(len(h)))
-							f.write("\t")
-							spec = SDA(lang._phones, lang._features, h)
-							markedness = sum([x for phone in spec.keys() for x in spec[phone] if x == 1])
-							f.write(str(markedness))
-							f.write("\t")
-							f.write(str(num_feats))
-							f.write("\t")
-							f.write(str(inv))
-							f.write("\t")
-							f.write(str(freq))
-							f.write("\t")
-							feat_counts = {f:sum([spec[phone][i] for phone in spec.keys() if spec[phone][i] == 1]) for i, f in enumerate(h)}
-							f.write(str(feat_counts))
-							f.write("\t")
-							f.write(str(spec))
-							f.write("\t")
-							f.write(str(inv_feats))
-							f.write("\t")
-							f.write(str(list(set(lang._features)-set(h))))
-							f.write("\n")
-		# parse what the user wants to write to file
-		
+			if not os.path.exists(fname):
+				os.mkdir(fname)
+			for lang in self.languages:
+				num_vowels = self.get_language_info(lang, "linv")
+				name = lang.name
+				num_feats = self.get_language_info(lang, "lfeats")
+				inv = self.get_language_info(lang, "inv")
+				freq = self.get_language_info(lang, "freq")
+				inv_feats = lang.phone_feat_dict
+				with open(os.path.join(fname,name.replace(" ","")+".txt"), 'w') as f:
+					f.write("num_vowels\tname\thierarchy\tlen_hier\tnum_marks\tnumfeats\tinv\tfreq\tfeat_marks\tinv_marks\tinv_feats\tunused_feats\n")
+					for h in lang.hierarchies:
+						f.write(str(num_vowels))
+						f.write("\t")
+						f.write(name)
+						f.write("\t")
+						f.write(str(h))
+						f.write("\t")
+						f.write(str(len(h)))
+						f.write("\t")
+						spec = SDA(lang._phones, lang._features, h)
+						markedness = sum([x for phone in spec.keys() for x in spec[phone] if x == 1])
+						f.write(str(markedness))
+						f.write("\t")
+						f.write(str(num_feats))
+						f.write("\t")
+						f.write(str(inv))
+						f.write("\t")
+						f.write(str(freq))
+						f.write("\t")
+						feat_counts = {f:sum([spec[phone][i] for phone in spec.keys() if spec[phone][i] == 1]) for i, f in enumerate(h)}
+						f.write(str(feat_counts))
+						f.write("\t")
+						f.write(str(spec))
+						f.write("\t")
+						f.write(str(inv_feats))
+						f.write("\t")
+						f.write(str(list(set(lang._features)-set(h))))
+						f.write("\n")
 		# make sure all the threads that need to be finished have finished
 		# using .join() on the appropriate groups of threads
 	def get_language_info(self, lang, arg):

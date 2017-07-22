@@ -1,6 +1,6 @@
 from __future__ import print_function
 from builtins import range
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 import math
 import sys
 import itertools
@@ -73,7 +73,8 @@ class Language(object):
 	def _update_if_necessary(function):
 		def perform_update_if_needed(self, *args, **kwargs):
 			if self._needsUpdate:
-				self._generate_hierarchies()
+				gen = self._generate_hierarchies()
+				deque(maxlen = 0).extend(gen)
 			return function(self, *args, **kwargs)
 		return perform_update_if_needed
 
@@ -87,8 +88,10 @@ class Language(object):
 		return [tuple([self._phones[p][self._features.index(f)] for f in features]) for p in self._phones.keys()]
 
 	@property
-	@_update_if_necessary
 	def hierarchies(self):
+		if self._needsUpdate:
+			gen = self._generate_hierarchies()
+			return gen
 		#return set([self.row_to_tuple(r) for r in self.table_hierarchies])
 		return self._hierarchies
 
@@ -117,13 +120,13 @@ class Language(object):
 		#print(len(minCombs))
 		
 		goodCombs=set()
-		goodPerms=set()
+		self._hierarchies=set()
 		badPerms=set()
 		
 		lengths = Counter()
 		counterTotal=0
-		for length in range(startCombLength, len(self._phones.keys())+1):
-			curCombs = list(itertools.combinations(self._features, length))
+		for length in range(startCombLength, min(len(self._phones.keys())+1,len(self._features)+1)):
+			curCombs = itertools.combinations(self._features, length)
 			for curComb in curCombs:
 				# self._phones
 				# self._features
@@ -134,12 +137,12 @@ class Language(object):
 				if len(phoneFeatArray) == len(set(phoneFeatArray)):
 					#add working feature set to set of sets
 					goodCombs.add(frozenset(curComb))
-					curPerms = list(itertools.permutations(curComb))
+					curPerms = itertools.permutations(curComb)
 					for perm in curPerms:
 						# immediately check for ordered containment
 						try:
 							for i in range(len(perm)):
-								if tuple(perm[0:i+1]) in goodPerms:
+								if tuple(perm[0:i+1]) in self._hierarchies:
 									# means that there are redundant features at the tail
 									#print("caught in first pass")
 									#print(str(perm) + " covered by " + str(perm[0:i+1]))
@@ -162,7 +165,7 @@ class Language(object):
 									raise ValueError("Bad")
 								prevNumDistinct = curNumDistinct
 						except ValueError:
-							badPerms.add(tuple(perm[0:i+1]))
+							badPerms.add(tuple(perm[0:i]))
 							#r = self.table_bad_hierarchies.row
 							#for f in self.table_bad_hierarchies.colnames:
 							#	try:
@@ -177,7 +180,8 @@ class Language(object):
 						#print(perm)
 						#print("good")
 						lengths[len(perm)] += 1
-						goodPerms.add(tuple(perm))
+						self._hierarchies.add(tuple(perm))
+						yield tuple(perm)
 						#r = self.table_hierarchies.row
 						#for f in self.table_hierarchies.colnames:
 						#	try:
@@ -195,9 +199,8 @@ class Language(object):
 					gui_update = str(len(self._phones.keys()))+'-'+"\t"+self.name+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
 					print(gui_update, end='\r\033[K')
 		if self.verbose:
-			gui_update = str(len(self._phones.keys()))+'-'+"\t"+self.name+'\t'+ str(len(goodPerms))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
+			gui_update = str(len(self._phones.keys()))+'-'+"\t"+self.name+'\t'+ str(len(self._hierarchies))+"\t"+str(counterTotal)+"\t"+str(len(curCombs))
 			print(gui_update)
-		self._hierarchies = goodPerms
 		self._hierarchyLengths = lengths
 		self._needsUpdate = False
 
