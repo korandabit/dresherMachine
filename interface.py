@@ -98,7 +98,7 @@ class DresherInterface(cmd.Cmd, object):
 			phoneme = sp[0]
 			features = sp[1:]
 			features = [f for f in features if f != "" and f != "\n" and f != "\r\r" and f != "\r"]
-			self.feature_dict[phoneme] = features
+			self.feature_dict[phoneme].extend(features)
 	def do_load(self, args):
 		"""syntax: load folder length(s)
 loads files from specified folder of specified inventory length(s)
