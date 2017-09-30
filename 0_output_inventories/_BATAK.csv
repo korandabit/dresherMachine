@@ -3,9 +3,9 @@ E,lower
 E,mid
 E,front
 E,unrounded
-..o,mid
-..o,back
-..o,rounded
+xxo,mid
+xxo,back
+xxo,rounded
 a,low
 a,central
 a,unrounded

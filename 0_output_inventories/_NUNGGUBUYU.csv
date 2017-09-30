@@ -1,0 +1,16 @@
+phoneme,feature
+4,raised
+4,low
+4,central
+4,unrounded
+I,lowered
+I,high
+I,front
+I,unrounded
+UU,lowered
+UU,high
+UU,back
+UU,unrounded
+a,low
+a,central
+a,unrounded

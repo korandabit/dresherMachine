@@ -1,0 +1,16 @@
+phoneme,feature
+xxe,mid
+xxe,front
+xxe,unrounded
+xxo,mid
+xxo,back
+xxo,rounded
+a+,low
+a+,front
+a+,unrounded
+i,high
+i,front
+i,unrounded
+u,high
+u,back
+u,rounded
