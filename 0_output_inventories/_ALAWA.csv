@@ -7,9 +7,9 @@ UU,lowered
 UU,high
 UU,back
 UU,unrounded
-..e,mid
-..e,front
-..e,unrounded
+xxe,mid
+xxe,front
+xxe,unrounded
 a,low
 a,central
 a,unrounded

@@ -1,0 +1,14 @@
+phoneme,feature
+E,lower
+E,mid
+E,front
+E,unrounded
+xxo,mid
+xxo,back
+xxo,rounded
+a,low
+a,central
+a,unrounded
+i,high
+i,front
+i,unrounded

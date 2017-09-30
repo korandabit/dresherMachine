@@ -1,10 +1,10 @@
 phoneme,feature
-..e,mid
-..e,front
-..e,unrounded
-..o,mid
-..o,back
-..o,rounded
+xxe,mid
+xxe,front
+xxe,unrounded
+xxo,mid
+xxo,back
+xxo,rounded
 a,low
 a,central
 a,unrounded

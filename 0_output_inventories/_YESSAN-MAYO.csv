@@ -1,0 +1,14 @@
+phoneme,feature
+3,lower
+3,mid
+3,central
+3,unrounded
+a,low
+a,central
+a,unrounded
+a_),low
+a_),back
+a_),rounded
+i_,high
+i_,central
+i_,unrounded
